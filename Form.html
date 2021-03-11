@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!--
+    CSS sheet is from https://bulma.io/ provided under the MIT licence which follows:
+    "Copyright (c) 2018 Jeremy Thomas
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software."
+
+    link to repository: https://github.com/jgthms/bulma
+    link to OSI version of licence: https://opensource.org/licenses/MIT
+    -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Post Put &amp; delete</title>
+</head>
+<body>
+    <section class="hero is-primary">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title">Post Put and Delete form</h1>
+            </div>
+        </div>
+    </section>
+<div class="columns">
+    <div class="column">
+            <div class="container is-fluid" id="main_body">
+                    <form id="method_selector">
+                        <div class="field is-grouped">
+                            
+                            <div class="control">
+                                <label class="radio" for="method_selector_post">Post
+                                    <input type="radio" name="method_selector_radio" id="method_selector_post" value="post" onclick="select_action()" checked="checked">
+                                </label>
+                                <label class="radio" for="method_selector_post">Put
+                                    <input type="radio" name="method_selector_radio" id="method_selector_post" value="put" onclick="select_action()">
+                                </label>
+                                <label class="radio" for="method_selector_post">Delete
+                                    <input type="radio" name="method_selector_radio" id="method_selector_post" value="delete" onclick="select_action()">
+                                </label>
+                            </div>
+                        </div>
+                        <!-- begin options to add/ remove-->
+                        <div id="options_post">
+                            <div class="field">
+                                <div class="control">
+                                    <input class="input" placeholder="Currency code e.g GBP" type="text" name="post_curr" id="post_curr">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <div class="control">
+                                    <input class="input" placeholder="New rate e.g. 2.01" type="text" name="post_new_rate" id="post_new_rate">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <div class="control">
+                                    <button class="button" type="button" onclick="update_rate_manually()">Update currency rate</button>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div id="options_put">
+                            <div class="field">
+                                <div class="control">
+                                    <input class="input" placeholder="Currency code e.g GBP" type="text" name="put_curr" id="put_curr">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <div class="control">
+                                    <button class="button" type="button" onclick="add_new_currency()">Add new currency</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="options_delete">
+                                <div class="field">
+                                        <div class="control">
+                                            <input class="input" placeholder="Currency code e.g GBP" type="text" name="delete_curr" id="delete_curr">
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <div class="control">
+                                            <button class="button" type="button" onclick="delete_currency()">Delete currency</button>
+                                        </div>
+                                    </div>
+                        </div>
+                        <!--end options to add/remove -->
+                        <br/>
+                        <div class="field">
+                            <div class="control">
+                                <textarea class="textarea" placeholder="XML or JSON response will appear here" name="response_area" id="response_area" style="resize: none"></textarea>
+                            </div>
+                        </div>
+                        
+                    </form>
+                </div>
+    </div>
+    <div class="column"></div>
+    <div class="column"></div>
+</div>
+
+</body>
+<script>
+    //input name = actiongroup
+    function select_action()
+    {
+        var selected = document.querySelector("input[name='method_selector_radio']:checked").value;
+        console.log('selected: ');
+        console.log(selected);
+        switch (selected) {
+            case 'post':
+                document.getElementById("options_post").style.display='block';
+                document.getElementById("options_put").style.display='none';
+                document.getElementById("options_delete").style.display='none';
+                break;
+
+            case 'put':
+                document.getElementById("options_post").style.display='none';
+                document.getElementById("options_put").style.display='block';
+                document.getElementById("options_delete").style.display='none';
+                break;
+
+            case 'delete':
+                document.getElementById("options_post").style.display='none';
+                document.getElementById("options_put").style.display='none';
+                document.getElementById("options_delete").style.display='block';
+                break;
+
+            default:
+            console.log("Error: a radiobuttton has been clicked but not checked");
+                break;
+        }
+    }
+
+    function update_rate_manually()
+    {
+        console.log("posting new rate");
+        const input = new Map([
+            ['code', document.getElementById('post_curr').value],
+            ['rate', document.getElementById('post_new_rate').value]
+        ]);
+        const query = create_query_string(input);
+        console.log(query);
+        const xhttp = new XMLHttpRequest();
+        xhttp.open('POST', 'currPost.php', true);
+        
+        xhttp.onreadystatechange = function() {
+            console.log(this.readyState);
+            console.log(this.status);
+            if (this.readyState === 4 && this.status === 200) {
+                console.log(this.responseText);
+                document.getElementById('response_area').value = this.responseText;
+            }
+        };
+        xhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        
+        xhttp.send(query);
+
+    }
+
+    function add_new_currency()
+    {
+        console.log("putting new data");
+        const parameters = new Map([['code', document.getElementById('put_curr').value]]);
+        const query_string = create_query_string(parameters);
+        const xhttp = new XMLHttpRequest();
+        xhttp.open('PUT', 'currPut.php', true);
+        xhttp.setRequestHeader('Content-type', 'application/curncy-conv-urlencoded');
+        xhttp.onreadystatechange = function() {
+            console.log(this.readyState);
+            console.log(this.status);
+            if (this.readyState === 4 && this.status === 200) {
+                console.log(this.responseText);
+                document.getElementById('response_area').value = this.responseText;
+            }
+        };
+        xhttp.send(query_string);
+    }
+
+    function delete_currency()
+    {
+        const parameters = new Map([['code', document.getElementById('delete_curr').value]]);
+        const query_string = create_query_string(parameters);
+        const xhttp = new XMLHttpRequest();
+        xhttp.open('DELETE', 'currDel.php', true);
+        xhttp.setRequestHeader('Content-type', 'application/curncy-conv-urlencoded');
+        xhttp.onreadystatechange = function() {
+            console.log(this.readyState);
+            console.log(this.status);
+            if (this.readyState === 4 && this.status === 200) {
+                console.log(this.responseText);
+                document.getElementById('response_area').value = this.responseText;
+            }
+        };
+        xhttp.send(query_string);
+
+        console.log("deleting currency");
+    }
+    
+    function create_query_string(key_val)
+    {
+        function add_parameter_to_array(value, key, map)
+        {
+            entries.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+        }
+        const entries = [];
+        key_val.forEach(add_parameter_to_array);
+        const query_string = entries.join('&');
+        return query_string;
+    }
+    //var data = new Map([['key1', 'value1'], ['key2', 'value2']]);
+    //create_query_string(data);
+
+    //run select action on page load
+    select_action();
+</script>
+</html>
